@@ -67,7 +67,7 @@ public class Network implements Monitor {
             String phy = tableColumnOidMap.get(IF_PHY_ADDRESS).getValue(index);
             Long change = tableColumnOidMap.get(IF_LAST_CHANGE).getValue(index);
             Interface anInterface = sample.get(index);
-            if (anInterface != null) {
+            if (anInterface != null && (anInterface.change != null && !anInterface.change.equals(change))) {
                 Interface instance = interfaces.get(index);
                 if (instance == null) {
                     instance = anInterface;
@@ -138,6 +138,10 @@ public class Network implements Monitor {
         private DataSet<Double> inRate, outRate;
         private Long mill;
 
+        public Interface() {
+            inRate = new DataSet<Double>("In Rate");
+            outRate = new DataSet<Double>("Out Rate");
+        }
 
         public double getMtu() {
             return mtu;
@@ -157,6 +161,14 @@ public class Network implements Monitor {
 
         public DataSet<Double> getOutRate() {
             return outRate;
+        }
+
+        public String getPhyAddress() {
+            return phyAddress;
+        }
+
+        public String getIp() {
+            return ip;
         }
     }
 }
