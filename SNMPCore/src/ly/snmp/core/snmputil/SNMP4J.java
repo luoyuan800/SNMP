@@ -12,9 +12,11 @@ package ly.snmp.core.snmputil;
 import ly.snmp.core.model.Device;
 import ly.snmp.core.model.OIDValueType;
 import ly.snmp.core.model.Oid;
+import ly.snmp.core.model.SNMPParameter;
 import ly.snmp.core.model.SNMPVersion;
 import ly.snmp.core.model.TableColumnOid;
 import ly.snmp.core.model.TableOid;
+import ly.snmp.core.snmputil.lysnmp.MessageDispatcherLy;
 import org.snmp4j.CommunityTarget;
 import org.snmp4j.MessageDispatcher;
 import org.snmp4j.MessageDispatcherImpl;
@@ -33,10 +35,12 @@ import org.snmp4j.smi.Address;
 import org.snmp4j.smi.OID;
 import org.snmp4j.smi.OctetString;
 import org.snmp4j.smi.SMIConstants;
+import org.snmp4j.smi.TcpAddress;
 import org.snmp4j.smi.TimeTicks;
 import org.snmp4j.smi.UdpAddress;
 import org.snmp4j.smi.Variable;
 import org.snmp4j.smi.VariableBinding;
+import org.snmp4j.transport.DefaultTcpTransportMapping;
 import org.snmp4j.transport.DefaultUdpTransportMapping;
 import org.snmp4j.util.DefaultPDUFactory;
 import org.snmp4j.util.PDUFactory;
@@ -52,17 +56,18 @@ import java.util.List;
 import java.util.Map;
 
 public class SNMP4J implements SNMP {
+    private SNMPParameter parameter;
     private Snmp snmp;
-    private Device device;
     private Target target;
     private PDUFactory pduFactory;
     private TableUtils tableUtils;
 
-    public SNMP4J(Device device) throws IOException {
+    public SNMP4J(SNMPParameter parameter) throws IOException {
+        this.parameter = parameter;
         TransportMapping transport = new DefaultUdpTransportMapping();
         SecurityProtocols.getInstance().addDefaultProtocols();
-        MessageDispatcher disp = new MessageDispatcherImpl();
-        switch (device.getVersion()) {
+        MessageDispatcher disp = new MessageDispatcherLy();
+        switch (parameter.getVersion()) {
             case V1:
                 disp.addMessageProcessingModel(new MPv1());
                 break;
@@ -77,23 +82,22 @@ public class SNMP4J implements SNMP {
         USM usm = new USM(SecurityProtocols.getInstance(), localEngineID, 0);
         disp.addMessageProcessingModel(new MPv3(usm));
         transport.listen();
-        this.device = device;
         this.target = createTarget();
         pduFactory = new DefaultPDUFactory();
         tableUtils = new TableUtils(snmp, pduFactory);
     }
 
     public Target createTarget() throws UnknownHostException {
-        switch (device.getVersion()) {
+        switch (parameter.getVersion()) {
             case V1:
             case V2C:
                 CommunityTarget target = new CommunityTarget();
-                Address targetAddress = new UdpAddress(InetAddress.getByName(device.getIp()), device.getPort());
-                target.setCommunity(new OctetString(device.getCommunity()));
+                Address targetAddress = new UdpAddress(InetAddress.getByName(parameter.getIp()), parameter.getPort());
+                target.setCommunity(new OctetString(parameter.getCommunity()));
                 target.setAddress(targetAddress);
                 target.setRetries(3);
                 target.setTimeout(3000);
-                if (device.getVersion() == SNMPVersion.V1) {
+                if (parameter.getVersion() == SNMPVersion.V1) {
                     target.setVersion(SnmpConstants.version1);
                 } else {
                     target.setVersion(SnmpConstants.version2c);
@@ -300,7 +304,7 @@ public class SNMP4J implements SNMP {
                 break;
             case SMIConstants.SYNTAX_TIMETICKS:
                 oid.setValueType(OIDValueType.TimeTicks);
-                oid.setOidValue(((TimeTicks)variable).toMilliseconds() + "");
+                oid.setOidValue(index.toDottedString(),((TimeTicks)variable).toMilliseconds() + "");
                 return;
             case SMIConstants.SYNTAX_OCTET_STRING:
                 oid.setValueType(OIDValueType.String);

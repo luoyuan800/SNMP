@@ -30,7 +30,7 @@ public class SNMPManager implements Runnable {
         if (scheduledExecutorService == null || scheduledExecutorService.isShutdown()) {
             scheduledExecutorService = Executors.newScheduledThreadPool(51);
         }
-        this.future = scheduledExecutorService.scheduleWithFixedDelay(this, 5 * 60 * 1000, 10 * 5 * 60 * 1000, TimeUnit.MILLISECONDS);
+        this.future = scheduledExecutorService.scheduleWithFixedDelay(this, 1 * 60 * 1000, 10 * 1 * 60 * 1000, TimeUnit.MILLISECONDS);
     }
 
     private void managerDataSet() {

@@ -14,28 +14,41 @@ import java.util.Map;
 public class Device implements Runnable {
     private List<Oid> oids;
     private Map<String, Oid> oidMap;
-    private SNMPVersion version;
     private String ip;
-    private String community;
-    private int port;
     private SNMP snmp;
     private List<Monitor> monitors;
+    private SNMPParameter snmpParameter;
 
-    public Device(String ip, SNMPVersion v) {
+    public Device(String ip) {
         this.ip = ip;
-        this.version = v;
-        this.port = 161;
         this.monitors = new ArrayList<Monitor>();
     }
 
-    public void initDevice() throws IOException {
-        if (community == null || port == 0) {
-            throw new IllegalArgumentException("Please set the port and community String");
+    public Device(String ip, SNMPVersion version){
+
+    }
+
+
+    public void initDevice(){
+
+    }
+    public void initDevice(SNMPParameter snmpParameter) throws IOException {
+        if (snmpParameter == null || snmpParameter.getCommunity() == null) {
+            throw new IllegalArgumentException("Please initialize the snmp parameter!");
         }
-        snmp = new SNMP4J(this);
+        snmpParameter.setIp(ip);
+        this.snmpParameter = snmpParameter;
+        snmp = new SNMP4J(this.snmpParameter);
+    }
+
+    public void initDevice(SNMP snmp){
+        this.snmp = snmp;
     }
 
     public void doCollection() {
+        if(snmp == null){
+            throw new IllegalArgumentException("Please initialize the snmp parameter by call the method Device.initDevice(SNMPParameter)!");
+        }
         List<Oid> oids4C = new ArrayList<Oid>();
         if (oids != null) {
             oids4C.addAll(oids);
@@ -61,15 +74,15 @@ public class Device implements Runnable {
     }
 
     public String getCommunity() {
-        return community;
+        return snmpParameter.getCommunity();
     }
 
     public void setCommunity(String community) {
-        this.community = community;
+        this.snmpParameter.setCommunity(community);
     }
 
     public SNMPVersion getVersion() {
-        return version;
+        return this.snmpParameter.getVersion();
     }
 
     public List<Oid> getOids() {
@@ -86,11 +99,11 @@ public class Device implements Runnable {
     }
 
     public int getPort() {
-        return port;
+        return this.snmpParameter.getPort();
     }
 
     public void setPort(int port) {
-        this.port = port;
+        this.snmpParameter.setPort(port);
     }
 
     public Map<String, Oid> getOidMap() {
@@ -113,5 +126,9 @@ public class Device implements Runnable {
     @Override
     public void run() {
         doCollection();
+    }
+
+    public SNMPParameter getSnmpParameter() {
+        return snmpParameter;
     }
 }

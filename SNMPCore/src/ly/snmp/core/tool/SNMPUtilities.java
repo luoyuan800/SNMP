@@ -38,15 +38,6 @@ public class SNMPUtilities {
         }
     }
 
-    public static int replaceControlCode(int decCode) {
-        ASCIICode asciiCode = ASCIICode.getASCII(decCode);
-        if (asciiCode != ASCIICode.NO_CONTROL) {
-            return ASCIICode.SPACE.getDecimal_Code();
-        } else {
-            return decCode;
-        }
-    }
-
     public static byte intAsByte(int value) {
         return (byte) (value & 0xff);
     }

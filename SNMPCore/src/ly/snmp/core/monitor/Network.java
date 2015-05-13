@@ -42,6 +42,7 @@ public class Network implements Monitor {
     public Network() {
         oids = new HashSet<Oid>(Arrays.asList(new TableOid("1.3.6.1.2.1.2.2", IF_INDEX, IF_TYPE, IF_DESCR, IF_MTU, IF_SPEED, IF_PHY_ADDRESS, IF_LAST_CHANGE, IF_IN_OCTETS, IF_OUT_OCTETS),
                 new TableOid("1.3.6.1.2.1.4.20", IP_AD_ENT_ADDR, IP_AD_ENT_IF_INDEX)));
+        tableColumnOidMap = new HashMap<String, TableColumnOid>();
         for (Oid oid : oids) {
             for (TableColumnOid column : ((TableOid) oid).getColumns()) {
                 tableColumnOidMap.put(column.getOidString(), column);
@@ -49,6 +50,8 @@ public class Network implements Monitor {
         }
         interfaces = new HashMap<String, Interface>();
         sample = new HashMap<String, Interface>();
+        inRate = new DataSet<Double>("In Rate");
+        outRate = new DataSet<Double>("Out Rate");
     }
 
     @Override
@@ -58,6 +61,8 @@ public class Network implements Monitor {
 
     @Override
     public void build(Long time) {
+        Double totalIn = null;
+        Double totalOut = null;
         for (String index : tableColumnOidMap.get(IF_DESCR).getIndex()) {
             String des = tableColumnOidMap.get(IF_DESCR).getValue(index);
             Double inOcts = tableColumnOidMap.get(IF_IN_OCTETS).getValue(index);
@@ -67,15 +72,27 @@ public class Network implements Monitor {
             String phy = tableColumnOidMap.get(IF_PHY_ADDRESS).getValue(index);
             Long change = tableColumnOidMap.get(IF_LAST_CHANGE).getValue(index);
             Interface anInterface = sample.get(index);
-            if (anInterface != null && (anInterface.change != null && !anInterface.change.equals(change))) {
+            if (anInterface != null && anInterface.change != null && anInterface.change.equals(change)) {
                 Interface instance = interfaces.get(index);
                 if (instance == null) {
                     instance = anInterface;
                     interfaces.put(index, anInterface);
                 }
                 long mill = System.currentTimeMillis() - anInterface.mill;
-                instance.inRate.appendData(time, calculateRateWithOverflowCheck(inOcts, anInterface.inOcts, mill, 1000d * 1000d, true));
-                instance.outRate.appendData(time, calculateRateWithOverflowCheck(outOcts, anInterface.outOcts, mill, 1000d * 1000d, true));
+                Double in = calculateRateWithOverflowCheck(inOcts, anInterface.inOcts, mill, 1000d * 1000d, true);
+                Double out = calculateRateWithOverflowCheck(outOcts, anInterface.outOcts, mill, 1000d * 1000d, true);
+                if (totalIn != null && in != null) {
+                    totalIn += in;
+                } else {
+                    totalIn = in;
+                }
+                if (totalOut != null && out != null) {
+                    totalOut += out;
+                } else {
+                    totalOut = out;
+                }
+                instance.inRate.appendData(time, in);
+                instance.outRate.appendData(time, out);
                 instance.phyAddress = phy;
                 instance.mtu = mtu;
                 instance.speed = speed;
@@ -89,6 +106,12 @@ public class Network implements Monitor {
             anInterface.inOcts = inOcts;
             anInterface.outOcts = outOcts;
             anInterface.mill = System.currentTimeMillis();
+        }
+        if (totalIn != null) {
+            inRate.appendData(time, totalIn);
+        }
+        if (totalOut != null) {
+            outRate.appendData(time, totalOut);
         }
     }
 
@@ -105,7 +128,7 @@ public class Network implements Monitor {
 
     private Double calculateRateWithOverflowCheck(Double current, Double previous, Long mill, Double unit, boolean doNotGuess) {
         Long seconds = mill / 1000;
-        if (current == null || previous == null || current == Double.MAX_VALUE || previous == Double.MAX_VALUE) {
+        if (seconds == 0 || current == null || previous == null || current == Double.MAX_VALUE || previous == Double.MAX_VALUE) {
             return 0d;
         }
         double duration = 0;
@@ -124,6 +147,10 @@ public class Network implements Monitor {
             }
         }
         return duration / (seconds * unit);
+    }
+
+    public DataSet<Double> getInRate() {
+        return inRate;
     }
 
     public class Interface {

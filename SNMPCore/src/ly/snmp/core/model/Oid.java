@@ -37,12 +37,14 @@ public class Oid {
         return getValue(this.oidValue);
     }
 
-    protected  <T> T getValue(String oidValue) {
+    protected <T> T getValue(String oidValue) {
         try {
             switch (valueType) {
                 case Counter32:
                 case Counter64:
                 case INTEGER:
+                case Gauge32:
+                case Gauge64:
                     return (T) (Double.valueOf(oidValue));
                 case TimeTicks:
                     return (T) (Long.valueOf(oidValue));
