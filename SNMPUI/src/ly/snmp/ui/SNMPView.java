@@ -4,11 +4,15 @@ package ly.snmp.ui;
 import ly.snmp.core.model.DataSet;
 import ly.snmp.core.model.Device;
 import ly.snmp.core.monitor.CPU;
+import ly.snmp.core.monitor.Disk;
 import ly.snmp.core.monitor.Memory;
+import ly.snmp.core.monitor.Network;
 import ly.snmp.core.service.SNMPManager;
 
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.util.List;
 
 /**
@@ -41,6 +45,13 @@ public class SNMPView extends javax.swing.JFrame {
         initComponents();
     }
 
+    public SNMPView(SNMPManager manager){
+        super();
+        setManager(manager);
+        initComponents();
+        start();
+    }
+
     private void start(){
         runQuery = true;
         new Thread(new Runnable() {
@@ -54,9 +65,20 @@ public class SNMPView extends javax.swing.JFrame {
                     }
                     devicesList.setModel(new javax.swing.AbstractListModel() {
                         String[] strings = ips;
-                        public int getSize() { return strings.length; }
-                        public Object getElementAt(int i) { return strings[i]; }
+
+                        public int getSize() {
+                            return strings.length;
+                        }
+
+                        public Object getElementAt(int i) {
+                            return strings[i];
+                        }
                     });
+                    try {
+                        Thread.sleep(1000*5);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
                 }
             }
         }).start();
@@ -149,6 +171,12 @@ public class SNMPView extends javax.swing.JFrame {
         jMenu1.setText("File");
 
         add.setText("Add Device");
+        add.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                addDevice(e);
+            }
+        });
         jMenu1.add(add);
 
         deleteDevice.setText("Delete");
@@ -242,18 +270,38 @@ public class SNMPView extends javax.swing.JFrame {
         setResizable(false);
     }// </editor-fold>//GEN-END:initComponents
 
+    private void addDevice(ActionEvent e) {
+        java.awt.EventQueue.invokeLater(new Runnable() {
+            public void run() {
+                final AddDeivce dialog = new AddDeivce(view, true);
+                dialog.addWindowListener(new java.awt.event.WindowAdapter() {
+                    @Override
+                    public void windowClosing(java.awt.event.WindowEvent e) {
+                        dialog.dispose();
+                    }
+                });
+                dialog.setVisible(true);
+            }
+        });
+    }
+
     private void devicesListItemSelect(ListSelectionEvent event) {
-        String ip = (String)(event.getSource());
+        String ip = (String)(devicesList.getSelectedValue());
         List<Device> devices = manager.getDevices();
         for(Device device : devices){
             if(device.getIp().equals(ip)){
                 CPU cpu = device.getMonitor(CPU.class);
                 Memory memory = device.getMonitor(Memory.class);
+                Disk disk = device.getMonitor(Disk.class);
+                Network network = device.getMonitor(Network.class);
                 setCpuChart(cpu.getUtilization());
                 setMemoryChart(memory.getUsed());
+                setDiskChart(disk.getUsed());
+                setNetworkChart(network.getInRate());
                 break;
             }
         }
+        view.repaint();
     }
 
     private void formWindowClosing(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowClosing
@@ -335,6 +383,7 @@ public class SNMPView extends javax.swing.JFrame {
     private javax.swing.JMenuItem stop;
     private SNMPManager manager;
     private boolean runQuery;
+    private final SNMPView view = this;
 
     public SNMPManager getManager() {
         return manager;

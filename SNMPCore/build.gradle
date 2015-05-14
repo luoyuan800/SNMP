@@ -1,0 +1,23 @@
+apply plugin: 'java'
+repositories {
+    mavenLocal()
+    mavenCentral()
+    maven{
+        url "https://oosnmp.net/dist/release"
+    }
+}
+dependencies {
+    compile 'org.snmp4j:snmp4j:2.3.3'
+}
+jar {
+    manifest{
+        attributes 'Title': 'SNMPFramework', 'Version' : 1.0, 'Author':'LuoYuan'
+    }
+}
+sourceSets{
+    main {
+        java{
+            srcDir 'src'
+        }
+    }
+}
