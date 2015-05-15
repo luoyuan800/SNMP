@@ -1,8 +1,0 @@
-ly.snmp.core.model
-ly.snmp.core.monitor
-ly.snmp.core.policy
-ly.snmp.core.service
-ly.snmp.core.snmputil
-ly.snmp.core.snmputil.lysnmp
-ly.snmp.core.snmputil.trap
-ly.snmp.core.tool
