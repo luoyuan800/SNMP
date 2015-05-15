@@ -11,6 +11,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * <p>
+ * Device is Runnable
+ * Set those oid or monitor you want to collect, and run this instance in thread or direct call {@link #doCollection()}
+ * </p>
+ */
 public class Device implements Runnable {
     private List<Oid> oids;
     private Map<String, Oid> oidMap;
@@ -18,20 +24,36 @@ public class Device implements Runnable {
     private SNMP snmp;
     private List<Monitor> monitors;
     private SNMPParameter snmpParameter;
+    private List<SNMPTrap> traps;
 
     public Device(String ip) {
         this.ip = ip;
         this.monitors = new ArrayList<Monitor>();
+        this.traps = new ArrayList<SNMPTrap>();
     }
 
+    @Deprecated
+    /**
+     * Use {@link #Device(String)} replace
+     */
     public Device(String ip, SNMPVersion version){
 
     }
 
-
+    @Deprecated
+    /**
+     * {@see #initDevice(SNMPParameter)}
+     */
     public void initDevice(){
 
     }
+
+    /**
+     * Use this method to initialize the SNMP interface
+     * This initialize will use the SNMP4j for the base snmp implement.
+     * @param snmpParameter snmp configuration
+     * @throws IOException If the snmp could not open
+     */
     public void initDevice(SNMPParameter snmpParameter) throws IOException {
         if (snmpParameter == null || snmpParameter.getCommunity() == null) {
             throw new IllegalArgumentException("Please initialize the snmp parameter!");
@@ -41,10 +63,23 @@ public class Device implements Runnable {
         snmp = new SNMP4J(this.snmpParameter);
     }
 
+    /**
+     * This initialize use a special SNMP implement.
+     * See {#initDevice(SNMPParameter)}
+     * @param snmp
+     */
     public void initDevice(SNMP snmp){
         this.snmp = snmp;
     }
 
+    /**
+     * Doing collection
+     * <br>
+     * Before call this method, must call {@link #initDevice(SNMPParameter)}
+     * Otherwise will throw IllegalArgumentException
+     * After this method invoke, those oid which use {@link #addOids(Oid[])} will have value.
+     * And those {@link ly.snmp.core.monitor.Monitor} should get there value.
+     */
     public void doCollection() {
         if(snmp == null){
             throw new IllegalArgumentException("Please initialize the snmp parameter by call the method Device.initDevice(SNMPParameter)!");
@@ -130,5 +165,17 @@ public class Device implements Runnable {
 
     public SNMPParameter getSnmpParameter() {
         return snmpParameter;
+    }
+
+    /**
+     * Get snmp trap which send by this device
+     * @return Traps list
+     */
+    public List<SNMPTrap> getTraps() {
+        return traps;
+    }
+
+    public void addTraps(SNMPTrap trap) {
+        this.traps.add(trap);
     }
 }

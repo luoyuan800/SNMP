@@ -18,6 +18,11 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+/**
+ * Base system info for device<b>
+ *     name, description, time, contanct, location, sevices, object id
+ * </b>
+ */
 public class SystemInfo implements Monitor {
     public static final String
             SYSTEM_NAME = "1.3.6.1.2.1.1.5",

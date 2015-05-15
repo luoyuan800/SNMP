@@ -19,6 +19,9 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+/**
+ * Collect Memory by using 1.3.6.1.2.1.25.2.3 which type equals 1.3.6.1.2.1.25.2.1.2(Ram)
+ */
 public class Memory implements Monitor {
     private Double allocationUnits;
     private String index;
@@ -62,7 +65,7 @@ public class Memory implements Monitor {
         return this.index;
     }
 
-    public double buildUsed() {
+    private double buildUsed() {
         double alloc = getAllocUnit();
         TableColumnOid used = oids.get("1.3.6.1.2.1.25.2.3.1.6");
         Double usedBlock = used.getValue(findIndex());
@@ -73,7 +76,7 @@ public class Memory implements Monitor {
         }
     }
 
-    public double buildTotalSize() {
+    private double buildTotalSize() {
         double alloc = getAllocUnit();
         TableColumnOid used = oids.get("1.3.6.1.2.1.25.2.3.1.5");
         Double size = used.getValue(findIndex());

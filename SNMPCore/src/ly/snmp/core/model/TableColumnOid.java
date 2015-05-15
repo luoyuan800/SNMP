@@ -14,6 +14,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+/**
+ * Table column oid will set as child in {@link TableOid}
+ */
 public class TableColumnOid extends Oid {
     private Map<String, String> oidValue;
     public TableColumnOid(String oid) {
@@ -28,10 +31,20 @@ public class TableColumnOid extends Oid {
         oidValue.put(index, value);
     }
 
+    /**
+     * See {@link TableOid#getColumns()}
+     * @param index
+     * @param <T>
+     * @return
+     */
     public <T> T getValue(String index){
         return super.getValue(oidValue.get(index));
     }
 
+    /**
+     * See {@link TableOid#getColumns()}
+     * @return
+     */
     public Set<String> getIndex(){
         return oidValue.keySet();
     }

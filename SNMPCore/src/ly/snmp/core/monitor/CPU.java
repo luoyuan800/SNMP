@@ -18,6 +18,9 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
+/**
+ * This class build a model for collect cpu info on a special host, use 1.3.6.1.2.1.25.3.3(processor table)
+ */
 public class CPU implements Monitor {
 
     private Set<Oid> oids = new HashSet<Oid>(Arrays.asList(new TableOid("1.3.6.1.2.1.25.3.3", "1.3.6.1.2.1.25.3.3.1.2")));
@@ -46,6 +49,12 @@ public class CPU implements Monitor {
         this.utilization.appendData(time, utilization);
     }
 
+    /**
+     * Get cpu total utilization
+     * <br>
+     * If a device has multiply cpu, it will return the average utilization.
+     * @return
+     */
     public DataSet<Double> getUtilization(){
         return utilization;
     }

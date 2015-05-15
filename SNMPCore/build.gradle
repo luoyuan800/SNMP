@@ -1,4 +1,5 @@
 apply plugin: 'java'
+version = '1.0.0'
 repositories {
     mavenLocal()
     mavenCentral()
@@ -13,6 +14,12 @@ jar {
     manifest{
         attributes 'Title': 'SNMPFramework', 'Version' : 1.0, 'Author':'LuoYuan'
     }
+    metaInf {
+        from('..') {
+            include '**/*.md'
+        }
+        includeEmptyDirs = false
+    }
 }
 sourceSets{
     main {
@@ -20,4 +27,8 @@ sourceSets{
             srcDir 'src'
         }
     }
+}
+
+task javaDoces(type: Javadoc){
+    source = sourceSets.main.allJava
 }

@@ -13,13 +13,10 @@ import ly.snmp.core.model.SNMPTrap;
 import ly.snmp.core.snmputil.lysnmp.MessageDispatcherLy;
 import org.snmp4j.CommandResponder;
 import org.snmp4j.CommandResponderEvent;
-import org.snmp4j.MessageDispatcher;
 import org.snmp4j.PDU;
 import org.snmp4j.PDUv1;
 import org.snmp4j.Snmp;
 import org.snmp4j.TransportMapping;
-import org.snmp4j.event.AuthenticationFailureEvent;
-import org.snmp4j.event.AuthenticationFailureListener;
 import org.snmp4j.mp.MPv1;
 import org.snmp4j.mp.MPv2c;
 import org.snmp4j.mp.MPv3;
@@ -43,6 +40,7 @@ public class SNMPTrapListener implements CommandResponder {
     private Snmp snmp;
     private TransportMapping udpTrap;
     private TransportMapping tcpTrap;
+
     public SNMPTrapListener(int port) throws IOException {
         udpTrap = new DefaultUdpTransportMapping(new UdpAddress("0.0.0.0/" + port));
         tcpTrap = new DefaultTcpTransportMapping(new TcpAddress("0.0.0.0/" + port));
@@ -50,12 +48,6 @@ public class SNMPTrapListener implements CommandResponder {
         dispatcher.addMessageProcessingModel(new MPv1());
         dispatcher.addMessageProcessingModel(new MPv2c());
         dispatcher.addMessageProcessingModel(new MPv3());
-        dispatcher.addAuthenticationFailureListener(new AuthenticationFailureListener() {
-            @Override
-            public void authenticationFailure(final AuthenticationFailureEvent event) {
-                System.out.println("SNMP4jAuthenticationFailure");
-            }
-        });
         SecurityProtocols.getInstance().addDefaultProtocols();
         snmp = new Snmp(udpTrap);
         snmp.addCommandResponder(this);
@@ -82,52 +74,45 @@ public class SNMPTrapListener implements CommandResponder {
     }
 
     public void processv1Trap(final PDUv1 trapPDU, String community) {
-        try {
-            final String oidindex;
+        final String oidindex;
 
-            if (trapPDU.getGenericTrap() != PDUv1.ENTERPRISE_SPECIFIC) {
-                oidindex = "1.3.6.1.6.3.1.1.5." + (trapPDU.getGenericTrap() + 1);
-            } else {
-                oidindex = trapPDU.getEnterprise() + "." + trapPDU.getSpecificTrap();
-            }
-
-            final List<VariableBinding> varBinds = new ArrayList<VariableBinding>(trapPDU.getVariableBindings());
-            handleTrap(oidindex, trapPDU.getAgentAddress().toString(), community, varBinds);
-        } catch (Exception e) {
+        if (trapPDU.getGenericTrap() != PDUv1.ENTERPRISE_SPECIFIC) {
+            oidindex = "1.3.6.1.6.3.1.1.5." + (trapPDU.getGenericTrap() + 1);
+        } else {
+            oidindex = trapPDU.getEnterprise() + "." + trapPDU.getSpecificTrap();
         }
+
+        final List<VariableBinding> varBinds = new ArrayList<VariableBinding>(trapPDU.getVariableBindings());
+        handleTrap(oidindex, trapPDU.getAgentAddress().toString(), community, varBinds);
     }
 
     public void processv2Trap(final PDU trapPDU, final InetAddress inetAddress, String community, int securityLevel) {
-        try {
-            final List<VariableBinding> varBinds = new ArrayList<VariableBinding>(trapPDU.getVariableBindings());
-            final List<VariableBinding> trapVariables = new ArrayList<VariableBinding>(varBinds.size());
-            String trapOid = null;
+        final List<VariableBinding> varBinds = new ArrayList<VariableBinding>(trapPDU.getVariableBindings());
+        final List<VariableBinding> trapVariables = new ArrayList<VariableBinding>(varBinds.size());
+        String trapOid = null;
 
-            String ipAddress = inetAddress.getHostAddress();
+        String ipAddress = inetAddress.getHostAddress();
 
-            for (VariableBinding varBind : varBinds) {
-
-                final String varBindOid = varBind.getOid().toString();
-                if (varBindOid.startsWith("1.3.6.1.6.3.1.1.4.1") || varBindOid.startsWith("1.3.6.1.6.3.1.1.4.3")) { // SNMPv2-MIB::snmpTrapOID.0 or snmpTrapEnterprise
-                    trapOid = varBind.getVariable().toString();
-                } else if (varBindOid.startsWith("1.3.6.1.6.3.18.1.3")) {
-                    // RFC3584 section 3.1.4, look for actual IP Address in VarBind section
-                    ipAddress = varBind.getVariable().toString();
-                } else {
-                    trapVariables.add(varBind);
-                }
+        for (VariableBinding varBind : varBinds) {
+            final String varBindOid = varBind.getOid().toString();
+            if (varBindOid.startsWith("1.3.6.1.6.3.1.1.4.1") || varBindOid.startsWith("1.3.6.1.6.3.1.1.4.3")) { // SNMPv2-MIB::snmpTrapOID.0 or snmpTrapEnterprise
+                trapOid = varBind.getVariable().toString();
+            } else if (varBindOid.startsWith("1.3.6.1.6.3.18.1.3")) {
+                // RFC3584 section 3.1.4, look for actual IP Address in VarBind section
+                ipAddress = varBind.getVariable().toString();
+            } else {
+                trapVariables.add(varBind);
             }
-            if (trapOid == null) {
-                if (varBinds.size() > 1) {
-                    trapOid = varBinds.get(1).getVariable().toString();
-                } else {
-                    trapOid = "1.3.6.1.6.3.1.1.4.1.0";
-                }
-            }
-
-            handleTrap(trapOid, ipAddress, community, trapVariables);
-        } catch (Exception e) {
         }
+        if (trapOid == null) {
+            if (varBinds.size() > 1) {
+                trapOid = varBinds.get(1).getVariable().toString();
+            } else {
+                trapOid = "1.3.6.1.6.3.1.1.4.1.0";
+            }
+        }
+
+        handleTrap(trapOid, ipAddress, community, trapVariables);
     }
 
     private void handleTrap(final String trapOid, final String sourceAddress, final String community, final List<VariableBinding> varBinds) {

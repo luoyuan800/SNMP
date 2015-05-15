@@ -2,6 +2,9 @@ package ly.snmp.core.model;
 
 import java.util.Arrays;
 
+/**
+ * OID model use for base data
+ */
 public class Oid {
     private int[] oids;
     private OIDType type;
@@ -11,10 +14,18 @@ public class Oid {
     private String oidString;
     private boolean isNext = false;
 
+    /**
+     * Create instance by use an array of int.
+     * @param oids
+     */
     public Oid(int[] oids) {
         this.oids = oids;
     }
 
+    /**
+     * Create Oid by giving oid.
+     * @param oid
+     */
     public Oid(String oid) {
         if (oid == null || !oid.matches("(\\d\\.*)+")) {
             oid = "0.0";
@@ -29,6 +40,10 @@ public class Oid {
         }
     }
 
+    /**
+     * Get this oid value
+     * @return Value.toString()
+     */
     public String getOidValue() {
         return oidValue;
     }
@@ -37,6 +52,12 @@ public class Oid {
         return getValue(this.oidValue);
     }
 
+    /**
+     * Transform the value to special type by the oid value type
+     * @param oidValue The value source input
+     * @param <T> Special value type
+     * @return The value which had been transform
+     */
     protected <T> T getValue(String oidValue) {
         try {
             switch (valueType) {
@@ -56,10 +77,18 @@ public class Oid {
         }
     }
 
+    /**
+     * Get oid
+     * @return Split into array as {1.3.4.5.7}
+     */
     public int[] getOids() {
         return oids;
     }
 
+    /**
+     *
+     * @return oid int array as {1.3.4.5.7.0}
+     */
     public int[] getOidsWithZero() {
         int[] ints = new int[oids.length];
         for (int i = 0; i < oids.length; i++) {
@@ -73,6 +102,10 @@ public class Oid {
         this.oidValue = oidValue;
     }
 
+    /**
+     * OID value type
+     * @return count32, Integer32,...
+     */
     public OIDValueType getValueType() {
         return valueType;
     }
@@ -106,10 +139,18 @@ public class Oid {
         this.isNext = isNext;
     }
 
+    /**
+     * Is this oid not match the expect oid(use getNext)
+     * @return
+     */
     public boolean isNext() {
         return isNext;
     }
 
+    /**
+     * The oid type
+     * @return private, MIB2...
+     */
     public OIDType getType() {
         return type;
     }

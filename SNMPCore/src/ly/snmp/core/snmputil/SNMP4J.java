@@ -9,7 +9,6 @@
 
 package ly.snmp.core.snmputil;
 
-import ly.snmp.core.model.Device;
 import ly.snmp.core.model.OIDValueType;
 import ly.snmp.core.model.Oid;
 import ly.snmp.core.model.SNMPParameter;
@@ -19,7 +18,6 @@ import ly.snmp.core.model.TableOid;
 import ly.snmp.core.snmputil.lysnmp.MessageDispatcherLy;
 import org.snmp4j.CommunityTarget;
 import org.snmp4j.MessageDispatcher;
-import org.snmp4j.MessageDispatcherImpl;
 import org.snmp4j.PDU;
 import org.snmp4j.Snmp;
 import org.snmp4j.Target;
@@ -35,12 +33,10 @@ import org.snmp4j.smi.Address;
 import org.snmp4j.smi.OID;
 import org.snmp4j.smi.OctetString;
 import org.snmp4j.smi.SMIConstants;
-import org.snmp4j.smi.TcpAddress;
 import org.snmp4j.smi.TimeTicks;
 import org.snmp4j.smi.UdpAddress;
 import org.snmp4j.smi.Variable;
 import org.snmp4j.smi.VariableBinding;
-import org.snmp4j.transport.DefaultTcpTransportMapping;
 import org.snmp4j.transport.DefaultUdpTransportMapping;
 import org.snmp4j.util.DefaultPDUFactory;
 import org.snmp4j.util.PDUFactory;
@@ -55,6 +51,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Special use snmp4j to do the snmp collection.
+ */
 public class SNMP4J implements SNMP {
     private SNMPParameter parameter;
     private Snmp snmp;
@@ -87,7 +86,7 @@ public class SNMP4J implements SNMP {
         tableUtils = new TableUtils(snmp, pduFactory);
     }
 
-    public Target createTarget() throws UnknownHostException {
+    private Target createTarget() throws UnknownHostException {
         switch (parameter.getVersion()) {
             case V1:
             case V2C:
@@ -164,27 +163,27 @@ public class SNMP4J implements SNMP {
     public TableOid getTable(TableOid table) {
         Map<String, TableColumnOid> columnMap = new HashMap<String, TableColumnOid>(table.getColumns().length);
         OID[] columns = new OID[table.getColumns().length];
-        for(int i=0;i<columns.length;i++){
+        for (int i = 0; i < columns.length; i++) {
             columns[i] = new OID(table.getColumns()[i].getOids());
             columnMap.put(table.getColumns()[i].getOidString(), table.getColumns()[i]);
         }
         List<TableEvent> tableEvents = tableUtils.getTable(target, columns, null, null);
-        for(TableEvent tableEvent : tableEvents){
-            if(tableEvent == null){
+        for (TableEvent tableEvent : tableEvents) {
+            if (tableEvent == null) {
                 continue;
             }
             OID index = tableEvent.getIndex();
-            for(VariableBinding  variableBinding : tableEvent.getColumns()){
-                if(variableBinding==null){
+            for (VariableBinding variableBinding : tableEvent.getColumns()) {
+                if (variableBinding == null) {
                     continue;
                 }
                 OID oid = variableBinding.getOid();
                 oid.trim(index.size());
                 TableColumnOid column = columnMap.get(oid.toDottedString());
                 Variable variable = variableBinding.getVariable();
-                if(variable!=null && !variable.isException()){
+                if (variable != null && !variable.isException()) {
                     setTableColumnValueType(index, column, variable);
-                }else{
+                } else {
                     column.setValueType(OIDValueType.ERROR);
                 }
             }
@@ -197,9 +196,9 @@ public class SNMP4J implements SNMP {
         PDU pdu = pduFactory.createPDU(target);
         List<OID> oidList = new ArrayList<OID>(oids.length);
         for (Oid oid : oids) {
-            if(oid instanceof TableOid){
+            if (oid instanceof TableOid) {
                 this.getTable((TableOid) oid);
-            }else {
+            } else {
                 OID oid4j = new OID(oid.getOids());
                 pdu.add(new VariableBinding(oid4j));
                 oidList.add(oid4j);
@@ -278,13 +277,14 @@ public class SNMP4J implements SNMP {
                 break;
             case SMIConstants.SYNTAX_OCTET_STRING:
                 oid.setValueType(OIDValueType.String);
-                oid.setOidValue(((OctetString)variable).toASCII(' '));
+                oid.setOidValue(((OctetString) variable).toASCII(' '));
                 return;
             default:
                 oid.setValueType(OIDValueType.String);
         }
         oid.setOidValue(variable.toString());
     }
+
     private void setTableColumnValueType(OID index, TableColumnOid oid, Variable variable) {
         switch (variable.getSyntax()) {
             case SMIConstants.SYNTAX_COUNTER64:
@@ -304,11 +304,11 @@ public class SNMP4J implements SNMP {
                 break;
             case SMIConstants.SYNTAX_TIMETICKS:
                 oid.setValueType(OIDValueType.TimeTicks);
-                oid.setOidValue(index.toDottedString(),((TimeTicks)variable).toMilliseconds() + "");
+                oid.setOidValue(index.toDottedString(), ((TimeTicks) variable).toMilliseconds() + "");
                 return;
             case SMIConstants.SYNTAX_OCTET_STRING:
                 oid.setValueType(OIDValueType.String);
-                oid.setOidValue(index.toDottedString(), ((OctetString)variable).toASCII(' '));
+                oid.setOidValue(index.toDottedString(), ((OctetString) variable).toASCII(' '));
                 return;
             default:
                 oid.setValueType(OIDValueType.String);

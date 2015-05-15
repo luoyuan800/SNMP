@@ -2,9 +2,12 @@ package ly.snmp.core.service;
 
 import ly.snmp.core.model.DataSet;
 import ly.snmp.core.model.Device;
+import ly.snmp.core.snmputil.trap.SNMPTrapListener;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -20,7 +23,8 @@ public class SNMPManager implements Runnable {
     private ScheduledExecutorService scheduledExecutorService;
     private ScheduledFuture<?> future;
     private Map<String, Future<?>> runningDevices = new HashMap<String, Future<?>>();
-
+    private Set<Integer> listenPorts = new HashSet<Integer>();
+    private List<SNMPTrapListener> trapListeners = new ArrayList<SNMPTrapListener>();
     public static SNMPManager getInstance() {
         return _instance;
     }
@@ -69,8 +73,21 @@ public class SNMPManager implements Runnable {
 
     @Override
     public void run() {
+        Set<Integer> trapPorts = new HashSet<Integer>(deviceList.size());
         for (Device device : deviceList) {
             runningDevices.put(device.getIp(), scheduledExecutorService.submit(device));
+            trapPorts.add(device.getSnmpParameter().getTrapPort());
+        }
+        for(int port : trapPorts){
+            if(!listenPorts.contains(port)){
+                try {
+                    SNMPTrapListener listener = new SNMPTrapListener(port);
+                    listenPorts.add(port);
+                    trapListeners.add(listener);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
         }
     }
 
@@ -81,6 +98,15 @@ public class SNMPManager implements Runnable {
         if (scheduledExecutorService != null) {
             scheduledExecutorService.shutdownNow();
         }
+        for(SNMPTrapListener listener : trapListeners){
+            try {
+                listener.stop();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        listenPorts.clear();
+        trapListeners.clear();
     }
 }
 

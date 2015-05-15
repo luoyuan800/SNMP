@@ -20,6 +20,10 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+/**
+ * Use the ifTable 1.3.6.1.2.1.2.2 to collect interface data
+ * Also will try to use 1.3.6.1.2.1.4.20 to collect ip for each interface.
+ */
 public class Network implements Monitor {
     private Map<String, Interface> interfaces;
     private Map<String, Interface> sample;
@@ -151,6 +155,10 @@ public class Network implements Monitor {
 
     public DataSet<Double> getInRate() {
         return inRate;
+    }
+
+    public DataSet<Double> getOutRate() {
+        return outRate;
     }
 
     public class Interface {

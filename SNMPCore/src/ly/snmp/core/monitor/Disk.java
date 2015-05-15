@@ -22,6 +22,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+/**
+ * Use the 1.3.6.1.2.1.25.2.3 (Storage table) to collect disk data.
+ */
 public class Disk implements Monitor {
     private Double allocationUnits;
     private String index;
@@ -65,7 +68,7 @@ public class Disk implements Monitor {
         return indexs;
     }
 
-    public double buildUsed(Long time) {
+    private double buildUsed(Long time) {
         double totalUsed = 0;
         for (String index : findIndex()) {
             double alloc = getAllocUnit(index);
@@ -91,7 +94,7 @@ public class Disk implements Monitor {
         return logicalDisk;
     }
 
-    public double buildTotalSize(Long time) {
+    private double buildTotalSize(Long time) {
         double total = 0;
         for (String index : findIndex()) {
             double alloc = getAllocUnit(index);
@@ -114,14 +117,27 @@ public class Disk implements Monitor {
         return allocationUnits;
     }
 
+    /**
+     * Get Total used size about device<br>
+     * If the device have multiply hard disk, will return total size.
+     * @return It is a data set for that maybe the disk use size should be change.
+     */
     public DataSet<Double> getUsed() {
         return used;
     }
 
+    /**
+     * Get total size
+     * @return
+     */
     public DataSet<Double> getTotalSize() {
         return totalSize;
     }
 
+    /**
+     * Get the logical disk in target device.
+     * @return
+     */
     public Collection<LogicalDisk> getLogicalDisk(){
         return logicalDisks.values();
     }
