@@ -20,6 +20,9 @@ import org.snmp4j.smi.Address;
 
 import java.io.IOException;
 
+/**
+ * Extends the MessageDispatcherImpl and make it support the 64bit number.
+ */
 public class MessageDispatcherLy extends MessageDispatcherImpl {
     public void processMessage(TransportMapping sourceTransport, Address incomingAddress, BERInputStream wholeMessage, TransportStateReference tmStateReference) {
         fireIncrementCounter(new CounterEvent(this, org.snmp4j.mp.SnmpConstants.snmpInPkts));

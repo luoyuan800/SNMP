@@ -17,6 +17,13 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
+/**
+ * This will manage all the device add into in.
+ * <br>
+ * You can create a new device and add it into this manager by calling {@link #addDevice(Device)}<br>
+ * And then, this  manager will do the collection by the default interval.<br>
+ * This manager will handle a ScheduledExecutorService, so remember calling the {@link #destroy()} before stop you snmp process.
+ */
 public class SNMPManager implements Runnable {
     private static final SNMPManager _instance = new SNMPManager();
     private List<Device> deviceList = new ArrayList<Device>();
@@ -25,7 +32,10 @@ public class SNMPManager implements Runnable {
     private Map<String, Future<?>> runningDevices = new HashMap<String, Future<?>>();
     private Set<Integer> listenPorts = new HashSet<Integer>();
     private List<SNMPTrapListener> trapListeners = new ArrayList<SNMPTrapListener>();
-    public static SNMPManager getInstance() {
+    public static synchronized SNMPManager getInstance() {
+        if(_instance == null){
+
+        }
         return _instance;
     }
 

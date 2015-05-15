@@ -15,6 +15,11 @@ import org.snmp4j.smi.Counter64;
 
 import java.io.IOException;
 
+/**
+ * Default SNMP4j did not support the Integer64, and if a number is larger than integer32, it will not throw exception and return null
+ * <br>
+ * Here I build a new Integer64, and use it to replace the Integer34
+ */
 public class Integer64 extends Counter64 {
 
     @Override
