@@ -8,7 +8,10 @@
 */
 
 package ly.snmp.core.model;
-
+/*
+* The SNMP parameter bean class<br>
+*     If you want to init the snmp util, you should set those snmp config,the default snmp port are 163
+ */
 public class SNMPParameter {
     private int port = 161;
     private SNMPVersion version;

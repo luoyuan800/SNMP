@@ -34,7 +34,6 @@ public class SNMPManager implements Runnable {
     private List<SNMPTrapListener> trapListeners = new ArrayList<SNMPTrapListener>();
     public static synchronized SNMPManager getInstance() {
         if(_instance == null){
-
         }
         return _instance;
     }
@@ -44,7 +43,7 @@ public class SNMPManager implements Runnable {
         if (scheduledExecutorService == null || scheduledExecutorService.isShutdown()) {
             scheduledExecutorService = Executors.newScheduledThreadPool(51);
         }
-        this.future = scheduledExecutorService.scheduleWithFixedDelay(this, 1 * 60 * 1000, 10 * 1 * 60 * 1000, TimeUnit.MILLISECONDS);
+        this.future = scheduledExecutorService.scheduleAtFixedRate(this, 1, 60*1000, TimeUnit.MINUTES);
     }
 
     private void managerDataSet() {
@@ -117,6 +116,13 @@ public class SNMPManager implements Runnable {
         }
         listenPorts.clear();
         trapListeners.clear();
+    }
+
+    public synchronized void setScheduledPoolSize(int poolSize){
+        if (scheduledExecutorService != null && !scheduledExecutorService.isShutdown()) {
+            scheduledExecutorService.shutdownNow();
+        }
+        scheduledExecutorService = Executors.newScheduledThreadPool(poolSize);
     }
 }
 
