@@ -18,6 +18,12 @@ public class SNMPParameter {
     private String community;
     private int trapPort = 162;
     private String ip;
+    private String authentication;
+    private String privacy;
+    private Protocol authProtocol;
+    private Protocol privacyProtocol;
+    private int retry = 3;
+    private long timeout = 3000;
 
     public int getPort() {
         return port;
@@ -57,5 +63,60 @@ public class SNMPParameter {
 
     public void setIp(String ip) {
         this.ip = ip;
+    }
+
+    public String getAuthentication() {
+        return authentication;
+    }
+
+    public void setAuthentication(String authentication) {
+        this.authentication = authentication;
+    }
+
+    public String getPrivacy() {
+        return privacy;
+    }
+
+    public void setPrivacy(String privacy) {
+        this.privacy = privacy;
+    }
+
+    public Protocol getAuthProtocol() {
+        return authProtocol;
+    }
+
+    public void setAuthProtocol(Protocol authProtocol) {
+        this.authProtocol = authProtocol;
+    }
+
+    public Protocol getPrivacyProtocol() {
+        return privacyProtocol;
+    }
+
+    public void setPrivacyProtocol(Protocol privacyProtocol) {
+        this.privacyProtocol = privacyProtocol;
+    }
+
+    public void setUserName(String user){
+        this.community = user;
+    }
+    public String getUserName(){
+        return community;
+    }
+
+    public int getRetry() {
+        return retry;
+    }
+
+    public void setRetry(int retry) {
+        this.retry = retry;
+    }
+
+    public long getTimeout() {
+        return timeout;
+    }
+
+    public void setTimeout(long timeout) {
+        this.timeout = timeout;
     }
 }

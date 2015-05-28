@@ -22,13 +22,24 @@ import org.snmp4j.PDU;
 import org.snmp4j.Snmp;
 import org.snmp4j.Target;
 import org.snmp4j.TransportMapping;
+import org.snmp4j.UserTarget;
 import org.snmp4j.event.ResponseEvent;
 import org.snmp4j.mp.MPv1;
 import org.snmp4j.mp.MPv2c;
 import org.snmp4j.mp.MPv3;
 import org.snmp4j.mp.SnmpConstants;
+import org.snmp4j.security.AuthMD5;
+import org.snmp4j.security.AuthSHA;
+import org.snmp4j.security.Priv3DES;
+import org.snmp4j.security.PrivAES128;
+import org.snmp4j.security.PrivAES192;
+import org.snmp4j.security.PrivAES256;
+import org.snmp4j.security.PrivDES;
+import org.snmp4j.security.SecurityLevel;
+import org.snmp4j.security.SecurityModels;
 import org.snmp4j.security.SecurityProtocols;
 import org.snmp4j.security.USM;
+import org.snmp4j.security.UsmUser;
 import org.snmp4j.smi.Address;
 import org.snmp4j.smi.OID;
 import org.snmp4j.smi.OctetString;
@@ -66,6 +77,7 @@ public class SNMP4J implements SNMP {
         TransportMapping transport = new DefaultUdpTransportMapping();
         SecurityProtocols.getInstance().addDefaultProtocols();
         MessageDispatcher disp = new MessageDispatcherLy();
+        UsmUser user = null;
         switch (parameter.getVersion()) {
             case V1:
                 disp.addMessageProcessingModel(new MPv1());
@@ -75,10 +87,51 @@ public class SNMP4J implements SNMP {
                 break;
             case V3:
                 disp.addMessageProcessingModel(new MPv3());
+                String auth = parameter.getAuthentication();
+                String priv = parameter.getPrivacy();
+                OID authPro = null, privPro = null;
+                if (auth != null) {
+                    switch (parameter.getAuthProtocol()) {
+                        case AuthMD5:
+                            authPro = AuthMD5.ID;
+                            break;
+                        case AuthSHA:
+                            authPro = AuthSHA.ID;
+                            break;
+                        default:
+                            authPro = null;
+                    }
+                }
+                if (priv != null) {
+                    switch (parameter.getPrivacyProtocol()) {
+                        case Priv3DES:
+                            privPro = Priv3DES.ID;
+                            break;
+                        case PrivAES128:
+                            privPro = PrivAES128.ID;
+                            break;
+                        case PriveAES192:
+                            privPro = PrivAES192.ID;
+                            break;
+                        case PriveAES256:
+                            privPro = PrivAES256.ID;
+                            break;
+                        case PrivDES:
+                            privPro = PrivDES.ID;
+                            break;
+                        default:
+                            privPro = null;
+                    }
+                }
+                user = new UsmUser(new OctetString(parameter.getUserName()), authPro, auth != null ? new OctetString(auth) : null, privPro, priv != null ? new OctetString(priv) : null);
         }
         snmp = new Snmp(disp, transport);
         OctetString localEngineID = new OctetString(MPv3.createLocalEngineID());
         USM usm = new USM(SecurityProtocols.getInstance(), localEngineID, 0);
+        if (user != null) {
+            usm.addUser(user);
+        }
+        SecurityModels.getInstance().addSecurityModel(usm);
         disp.addMessageProcessingModel(new MPv3(usm));
         transport.listen();
         this.target = createTarget();
@@ -87,26 +140,41 @@ public class SNMP4J implements SNMP {
     }
 
     private Target createTarget() throws UnknownHostException {
+        Address targetAddress = new UdpAddress(InetAddress.getByName(parameter.getIp()), parameter.getPort());
+        Target target = null;
         switch (parameter.getVersion()) {
             case V1:
             case V2C:
-                CommunityTarget target = new CommunityTarget();
-                Address targetAddress = new UdpAddress(InetAddress.getByName(parameter.getIp()), parameter.getPort());
-                target.setCommunity(new OctetString(parameter.getCommunity()));
-                target.setAddress(targetAddress);
-                target.setRetries(3);
-                target.setTimeout(3000);
+                CommunityTarget communityTarget = new CommunityTarget();
+                communityTarget.setCommunity(new OctetString(parameter.getCommunity()));
+
                 if (parameter.getVersion() == SNMPVersion.V1) {
-                    target.setVersion(SnmpConstants.version1);
+                    communityTarget.setVersion(SnmpConstants.version1);
                 } else {
-                    target.setVersion(SnmpConstants.version2c);
+                    communityTarget.setVersion(SnmpConstants.version2c);
                 }
-                return target;
+                target = communityTarget;
+                break;
             case V3:
-                //TODO
-                throw new UnsupportedOperationException("Not support V3 currently!");
+                UserTarget userTarget = new UserTarget();
+                userTarget.setVersion(SnmpConstants.version3);
+                userTarget.setSecurityName(new OctetString(parameter.getUserName()));
+                int secLev = 0;
+                if (parameter.getAuthentication() != null && parameter.getPrivacy() != null) {
+                    secLev = SecurityLevel.AUTH_PRIV;
+                } else if (parameter.getAuthentication() == null && parameter.getPrivacy() == null) {
+                    secLev = SecurityLevel.NOAUTH_NOPRIV;
+                } else if (parameter.getAuthentication() != null) {
+                    secLev = SecurityLevel.AUTH_NOPRIV;
+                }
+                userTarget.setSecurityLevel(secLev);
+                target = userTarget;
+                break;
         }
-        return null;
+        target.setAddress(targetAddress);
+        target.setRetries(parameter.getRetry());
+        target.setTimeout(parameter.getTimeout());
+        return target;
     }
 
     @Override
@@ -216,7 +284,8 @@ public class SNMP4J implements SNMP {
                     oids[i].setValueType(OIDValueType.ERROR);
                 }
             }
-        } catch (IOException e) {
+
+        } catch (Exception e) {
             for (Oid oid : oids) {
                 oid.setException(e);
                 oid.setValueType(OIDValueType.ERROR);
