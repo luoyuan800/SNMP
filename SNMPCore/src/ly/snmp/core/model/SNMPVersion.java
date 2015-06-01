@@ -9,5 +9,5 @@
 package ly.snmp.core.model;
 
 public enum SNMPVersion {
-    V1, V2C, V3
+    V1, V2C, V3;
 }

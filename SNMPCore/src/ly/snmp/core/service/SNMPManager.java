@@ -26,12 +26,13 @@ import java.util.concurrent.TimeUnit;
  */
 public class SNMPManager implements Runnable {
     private static final SNMPManager _instance = new SNMPManager();
-    private List<Device> deviceList = new ArrayList<Device>();
+    private final List<Device> deviceList = new ArrayList<Device>();
     private ScheduledExecutorService scheduledExecutorService;
     private ScheduledFuture<?> future;
     private Map<String, Future<?>> runningDevices = new HashMap<String, Future<?>>();
     private Set<Integer> listenPorts = new HashSet<Integer>();
     private List<SNMPTrapListener> trapListeners = new ArrayList<SNMPTrapListener>();
+    private final Set<String> ips = new HashSet<String>();
     public static synchronized SNMPManager getInstance() {
         if(_instance == null){
         }
@@ -59,23 +60,32 @@ public class SNMPManager implements Runnable {
     }
 
     public int addDevice(Device device) {
+        synchronized (ips){
+            if(ips.contains(device.getIp())){
+                return deviceList.size();
+            }else{
+                ips.add(device.getIp());
+            }
+        }
         deviceList.add(device);
         return deviceList.size();
     }
 
     public int removeDevice(String ip) {
-        Device device = null;
-        for (Device dev : deviceList) {
-            if (dev.getIp().equals(ip)) {
-                device = dev;
-                break;
+        synchronized (deviceList){
+            Device device = null;
+            for (Device dev : deviceList) {
+                if (dev.getIp().equals(ip)) {
+                    device = dev;
+                    break;
+                }
             }
-        }
-        if(device!=null) {
-            Future running = runningDevices.get(device.getIp());
-            if(running!=null && !running.isCancelled() && !running.isDone()) running.cancel(true);
-            runningDevices.remove(device.getIp());
-            deviceList.remove(device);
+            if (device != null) {
+                Future running = runningDevices.get(device.getIp());
+                if (running != null && !running.isCancelled() && !running.isDone()) running.cancel(true);
+                runningDevices.remove(device.getIp());
+                deviceList.remove(device);
+            }
         }
         return deviceList.size();
     }
