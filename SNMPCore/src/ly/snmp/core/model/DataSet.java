@@ -27,6 +27,7 @@ public class DataSet<T extends Number> {
     private Policy policy;
     private static HashSet<DataSet> dataSets = new HashSet<DataSet>();
     private String name;
+    private T latest;
 
     /**
      * A static method for get all the instances create for this class.
@@ -54,6 +55,7 @@ public class DataSet<T extends Number> {
      */
     public void appendData(Long time, T data) {
         this.date.put(time, data);
+        this.latest = data;
     }
 
     /**
@@ -92,5 +94,9 @@ public class DataSet<T extends Number> {
 
     public String getName() {
         return name;
+    }
+    
+    public T getLatestData(){
+    	return latest;
     }
 }
