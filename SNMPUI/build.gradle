@@ -1,0 +1,25 @@
+apply plugin: 'war'
+version = '1.0.0'
+apply plugin: 'jetty'
+apply plugin: 'eclipse-wtp'
+httpPort = 8888
+repositories {
+    mavenLocal()
+    flatDir{
+        dirs 'src/main/webapp/WEB-INF/lib'
+    }
+}
+dependencies {
+    compile ([':SNMPCore:1.0.0'],[':servlet-api:2.4'])
+}
+war {
+    manifest{
+        attributes 'Title': 'SNMPFrameworkUI', 'Version' : 1.0, 'Author':'LuoYuan'
+    }
+    metaInf {
+        from('.') {
+            include '**/*.md'
+        }
+        includeEmptyDirs = false
+    }
+}
