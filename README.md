@@ -9,3 +9,6 @@ This project build by gradle<br>
 use <<strong>gradle build</strong>> build the jar component, you can get jar form build/libs/<br>
 use <<strong>gradle javaDoces</strong>> build the javaDoc for you reference. You can get the java doc from build/doces/javadoc
 
+# 使用说明
+http://luoyuan800.github.io/2015/07/06/SNMP-snmp4j/#more
+
