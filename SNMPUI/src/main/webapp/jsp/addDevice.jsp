@@ -44,7 +44,7 @@
 	    		<tr>
 	    			<td>Monitors:</td>
 	    			<td>
-	    				<select class="easyui-combobox" name="monitors">
+	    				<select class="easyui-combobox" data-options="multiple:true" name="monitors">
 							<option value="cpu">CPU</option>
 							<option value="disk">Disk</option>
 							<option value="memory">Memory</option>

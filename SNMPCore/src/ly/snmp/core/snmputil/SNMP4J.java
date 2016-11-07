@@ -18,6 +18,7 @@ import ly.snmp.core.model.TableOid;
 import ly.snmp.core.snmputil.lysnmp.MessageDispatcherLy;
 import org.snmp4j.CommunityTarget;
 import org.snmp4j.MessageDispatcher;
+import org.snmp4j.MessageDispatcherImpl;
 import org.snmp4j.PDU;
 import org.snmp4j.Snmp;
 import org.snmp4j.Target;
@@ -76,7 +77,7 @@ public class SNMP4J implements SNMP {
         this.parameter = parameter;
         TransportMapping transport = new DefaultUdpTransportMapping();
         SecurityProtocols.getInstance().addDefaultProtocols();
-        MessageDispatcher disp = new MessageDispatcherLy();
+        MessageDispatcher disp = new MessageDispatcherImpl();
         UsmUser user = null;
         switch (parameter.getVersion()) {
             case V1:

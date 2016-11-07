@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="output" path="bin"/>
+	<classpathentry kind="src" path="src"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER" exported="true"/>
+	<classpathentry sourcepath="C:/Users/gluo/.gradle/caches/modules-2/files-2.1/org.snmp4j/snmp4j/2.3.3/997687973b1c249c3ebf2d22ea5e7d02f4539cae/snmp4j-2.3.3-sources.jar" kind="lib" path="C:/Users/gluo/.gradle/caches/modules-2/files-2.1/org.snmp4j/snmp4j/2.3.3/ff91ca935b7be79b5d1a86927ace47d2dcb4001/snmp4j-2.3.3.jar" exported="true"/>
+	<classpathentry kind="lib" path="C:/Users/gluo/.m2/repository/log4j/log4j/1.2.14/log4j-1.2.14.jar" exported="true"/>
+</classpath>

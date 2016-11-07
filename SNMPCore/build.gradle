@@ -1,4 +1,7 @@
 apply plugin: 'java'
+apply plugin: 'maven'
+apply plugin: 'eclipse'
+
 version = '1.0.0'
 repositories {
     mavenLocal()
@@ -15,7 +18,7 @@ jar {
         attributes 'Title': 'SNMPFramework', 'Version' : 1.0, 'Author':'LuoYuan'
     }
     metaInf {
-        from('..') {
+        from('.') {
             include '**/*.md'
         }
         includeEmptyDirs = false
@@ -31,4 +34,19 @@ sourceSets{
 
 task javaDoces(type: Javadoc){
     source = sourceSets.main.allJava
+}
+
+uploadArchives{
+    repositories{
+        mavenDeployer{
+            repository(url: "file://C:\\Users\\gluo\\.m2\\repository/"){
+                pom.groupId = "ly:snmp"
+            }
+        }
+        mavenDeployer{
+            repository(url: "file://src/webapp/WEB-INF/lib/"){
+                pom.groupId = "ly:snmp"
+            }
+        }
+    }
 }
