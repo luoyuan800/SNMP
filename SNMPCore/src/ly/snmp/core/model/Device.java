@@ -21,7 +21,7 @@ public class Device implements Runnable {
     private List<Oid> oids;
     private Map<String, Oid> oidMap;
     private String ip;
-    private SNMP snmp;
+    protected SNMP snmp;
     private List<Monitor> monitors;
     private SNMPParameter snmpParameter;
     private List<SNMPTrap> traps;

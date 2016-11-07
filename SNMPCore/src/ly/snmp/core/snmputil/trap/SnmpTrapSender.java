@@ -25,14 +25,13 @@ import org.snmp4j.transport.DefaultUdpTransportMapping;
 
 import java.io.IOException;
 import java.util.Map;
-import java.util.Observable;
 
 /**
  * 本类用于发送v3 Trap信息
  *
  * @author luoyuan
  */
-public class SnmpTrap {
+public class SnmpTrapSender {
 
     private Snmp snmp = null;
 
@@ -40,7 +39,7 @@ public class SnmpTrap {
 
     private PDU pdu;
 
-    public SnmpTrap(String target, int port){
+    public SnmpTrapSender(String target, int port){
 
         // 设置目的地的IP和端口
         targetAddress = GenericAddress.parse(String.format("udp:%s/%s", target, port));
@@ -151,7 +150,7 @@ public class SnmpTrap {
 
     public static void main(String[] args) {
         try {
-            SnmpTrap trapSender = new SnmpTrap("10.154.10.11", 162);
+            SnmpTrapSender trapSender = new SnmpTrapSender("10.154.10.11", 162);
             trapSender.sendV3PDU();
 //            trapSender.sendV1PDU();
         } catch (IOException e) {
